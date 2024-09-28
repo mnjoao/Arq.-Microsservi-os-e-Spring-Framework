@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: clientedb
+    ports:
+      - "3306:3306"
+
+  service-a:
+    build:
+      context: ./cliente
+    container_name: service-cliente
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka
+      - rabbitmq
+      - logstash  
+    environment:
+      SPRING_PROFILES_ACTIVE: docker  
+    networks:
+      - app-network
+
+  service-b:
+    build:
+      context: ./produtos
+    container_name: service-produtos
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka
+      - rabbitmq
+      - logstash  
+    environment:
+      SPRING_PROFILES_ACTIVE: docker  
+    networks:
+      - app-network
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+ # Eureka Service Discovery
+  eureka:
+    image: netflixoss/eureka:latest
+    container_name: eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # Porta para o broker
+      - "15672:15672"  # Porta para o painel de gerenciamento
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.0
+    container_name: logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"  # Porta para receber logs via TCP
+      - "9600:9600"  # Porta para API de monitoramento do Logstash
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

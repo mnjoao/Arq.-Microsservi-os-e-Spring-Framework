@@ -1,0 +1,41 @@
+server:
+  port: 8081  # Porta onde o service-produto irá rodar
+
+spring:
+  application:
+    name: service-produto  # Nome do serviço no Eureka
+  cloud:
+    config:
+      enabled: true  # Habilitar verificação de configuração no Config Server
+      import: "optional:configserver:http://localhost:8888"  # Config Server para centralizar configurações
+  rabbitmq:
+    host: rabbitmq  # Alterar de localhost para o nome do container RabbitMQ
+    port: 5672
+    username: guest
+    password: guest
+  
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:8761/eureka/  # Alterar localhost para o container eureka
+  instance:
+    prefer-ip-address: true  # Usar endereço IP preferencial
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Expor todos os endpoints do Actuator
+  prometheus:
+    metrics:
+      export:
+        enabled: true  # Nova configuração para habilitar o Prometheus
+  endpoint:
+    prometheus:
+      enabled: true  # Habilitar o endpoint do Prometheus
